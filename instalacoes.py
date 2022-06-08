@@ -6,6 +6,13 @@ HORIZONTAL = 0
 CIMA = 1
 CENTRO = 2
 
+# tipos de conexão (liso ou roscável, a jusante ou a montante)
+# L = False, R = True
+LL = (False, False)
+LR = (False, True)
+RL = (True, False)
+RR = (True, True)
+
 """ USOS:
     Formato: 'nome': (vazão, peso relativo)
 """
@@ -90,6 +97,13 @@ class _Componente:
             self.material = kwargs['material']
         else:
             self.material = _Componente._INDEF
+
+        if 't' in kwargs:
+            self.tipo = kwargs['t']
+        elif 'tipo' in kwargs:
+            self.tipo = kwargs['tipo']
+        else:
+            self.tipo = LL
 
     @abc.abstractmethod
     def __str__(self):
