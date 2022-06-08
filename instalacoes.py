@@ -30,6 +30,44 @@ USOS = {
 
 usos = {k.lower(): v for k, v in USOS.items()}
 
+pols = (
+    '1/2',
+    '3/4',
+    '1',
+    '1 1/4',
+    '1 1/2',
+    '2',
+    '2 1/2',
+    '3',
+    '4'
+)
+
+mms = (
+    15,
+    20,
+    25,
+    32,
+    40,
+    50,
+    60,
+    75,
+    100
+)
+
+
+def pol_em_mm(pol):
+    if pol in pols:
+        return mms[pols.index(pol)]
+    else:
+        raise ValueError('Valor em polegadas não é um valor válido. Exs de valores válidos: "3/4" e "3"')
+
+
+def mm_em_pol(mm):
+    if mm in mms:
+        return pols[mms.index(mm)]
+    else:
+        raise ValueError('Valor em milímetros não é um valor padrão')
+
 
 class _Componente:
     _INDEF = '!definir!'
@@ -40,9 +78,9 @@ class _Componente:
 
         self.montante = None
         if 'd' in kwargs:
-            self.diametro = kwargs['d']
+            self.diametro = _Componente._get_mm(kwargs['d'])
         elif 'diametro' in kwargs:
-            self.diametro = kwargs['diametro']
+            self.diametro = _Componente._get_mm(kwargs['diametro'])
         else:
             self.diametro = _Componente._INDEF
 
@@ -71,6 +109,25 @@ class _Componente:
             raise Warning(f'Ao adicionar {other} a {self}.'
                           f'Verificou-se que o diâmetro de {other} é maior que o de {self}')
         return other
+
+    @staticmethod
+    def _get_mm(val):
+        """ Função responsável por tratar input de diâmetro e retornar. """
+        if isinstance(val, int) or isinstance(val, float):  # se for um número
+            mm_em_pol(val)  # levanta erro se o valor não for um valor válido
+            return val  # retorna o número
+        elif isinstance(val, str):  # se for uma string
+            try:
+                i = int(val)  # tenta converter para int
+                if i in mms:  # testa se o int é milímetro
+                    return i
+                else:
+                    return pol_em_mm(val)
+            except ValueError:
+                pass
+
+        # trecho só executado se nada for retornado
+        raise ValueError('Valor de diâmetro inválido.')
 
     @staticmethod
     def _adapt_kwargs(kwargs):
@@ -326,4 +383,4 @@ class PontoDeUtilizacao(_Componente):
 
 
 if __name__ == '__main__':
-    print(usos)
+    print(mm_em_pol(20))
