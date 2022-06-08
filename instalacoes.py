@@ -1,10 +1,34 @@
-# define direções que serão usadas como constantes para o joelho
 import abc
 
+# define direções que serão usadas como constantes de direção
 BAIXO = -1
 HORIZONTAL = 0
 CIMA = 1
 CENTRO = 2
+
+""" USOS:
+    Formato: 'nome': (vazão, peso relativo)
+"""
+USOS = {
+    'Bacia Sanitária c Caixa': (0.15, 0.3),
+    'Bacia Sanitária c Válvula': (1.7, 32),
+    'Banheira': (0.3, 1),
+    'Bidê': (0.1, 0.1),
+    'Ducha Higiênica': (0.2, 0.4),
+    'Chuveiro': (0.2, 0.4),
+    'Chuveiro Elétrico': (0.1, 0.1),
+    'Lava Louças': (0.3, 1),
+    'Lava Roupas': (0.3, 1),
+    'Lavatório': (0.15, 0.3),
+    'Mictório Cerâmico c Sifão': (0.5, 2.8),
+    'Mictório Cerâmico s Sifão': (0.15, 0.3),
+    'Pia': (0.25, 0.7),
+    'Pia c Torneira Elétrica': (0.1, 0.1),
+    'Tanque': (0.25, 0.7),
+    'Torneira de Jardim': (0.2, 0.4)
+}
+
+usos = {k.lower(): v for k, v in USOS.items()}
 
 
 class _Componente:
@@ -12,6 +36,8 @@ class _Componente:
 
     @abc.abstractmethod
     def __init__(self, **kwargs):
+        kwargs = _Componente._adapt_kwargs(kwargs)
+
         self.montante = None
         if 'd' in kwargs:
             self.diametro = kwargs['d']
@@ -45,6 +71,14 @@ class _Componente:
             raise Warning(f'Ao adicionar {other} a {self}.'
                           f'Verificou-se que o diâmetro de {other} é maior que o de {self}')
         return other
+
+    @staticmethod
+    def _adapt_kwargs(kwargs):
+        """ Adapta os argumentos para lower case, permitindo não ser case sensitive """
+        nkwargs = {}
+        for k, v in kwargs:
+            nkwargs[k.lower()] = v
+        return nkwargs
 
     def detalhar(self):
         return f'Diâmetro: {self.diametro} mm\nMaterial: {self.material}'
@@ -89,6 +123,8 @@ class _Componente:
 class Tubo(_Componente):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        kwargs = _Componente._adapt_kwargs(kwargs)
+
         if 'c' in kwargs:
             self.comprimento = kwargs['c']
         elif 'comp' in kwargs:
@@ -108,6 +144,8 @@ class Tubo(_Componente):
 class _Joelho(_Componente):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        kwargs = _Componente._adapt_kwargs(kwargs)
+
         if 'direc' in kwargs:
             self.direc = kwargs['direc']
         elif 'direcao' in kwargs:
@@ -143,6 +181,8 @@ class Curva45(_Joelho):
 class T(_Componente):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        kwargs = _Componente._adapt_kwargs(kwargs)
+
         self.jusante_b = None
         self.jusante_a = None
         self.direc_b = None
@@ -197,6 +237,8 @@ class T(_Componente):
 class SaidaReservatorio(_Componente):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        kwargs = _Componente._adapt_kwargs(kwargs)
+
         if 'direc' in kwargs:
             self.direc = kwargs['direc']
         elif 'direcao' in kwargs:
@@ -227,6 +269,8 @@ class SaidaReservatorio(_Componente):
 class Registro(_Componente):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        kwargs = _Componente._adapt_kwargs(kwargs)
+
         if 't' in kwargs:
             self.tipo = kwargs['t']
         elif 'tipo' in kwargs:
@@ -241,6 +285,8 @@ class Registro(_Componente):
 class PontoDeUtilizacao(_Componente):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        kwargs = _Componente._adapt_kwargs(kwargs)
+
         self.uso = None
         if 'u' in kwargs:
             self.uso = kwargs['u']
@@ -251,17 +297,25 @@ class PontoDeUtilizacao(_Componente):
             self.peso = kwargs['peso_relativo']
         elif 'peso' in kwargs:
             self.peso = kwargs['peso']
+        elif 'pr' in kwargs:
+            self.peso = kwargs['pr']
         elif 'p' in kwargs:
             self.peso = kwargs['p']
 
         elif 'vazao' in kwargs:
-            self.peso = kwargs['vazao']
+            self.vazao = kwargs['vazao']
         elif 'v' in kwargs:
-            self.peso = kwargs['v']
+            self.vazao = kwargs['v']
 
         else:
             raise ValueError('É necessário identificar algum tipo de uso do ponto de utilização, seja pelo uso'
                              '(ver tabela de usos), seja pelo peso relativo, seja pela vazão de projeto (L/s).')
+
+        if self.uso and self.uso not in usos:
+            raise ValueError('Uso {}')
+        else:
+            self.vazao = usos[self.uso][0]
+            self.peso = usos[self.uso][1]
 
     def __str__(self):
         r = 'Ponto de utilização{}'
@@ -272,4 +326,4 @@ class PontoDeUtilizacao(_Componente):
 
 
 if __name__ == '__main__':
-    print(PontoDeUtilizacao(v=2))
+    print(usos)
