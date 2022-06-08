@@ -1,4 +1,6 @@
 # define direções que serão usadas como constantes para o joelho
+import abc
+
 BAIXO = -1
 HORIZONTAL = 0
 CIMA = 1
@@ -8,6 +10,7 @@ CENTRO = 2
 class _Componente:
     _INDEF = '!definir!'
 
+    @abc.abstractmethod
     def __init__(self, **kwargs):
         self.montante = None
         if 'd' in kwargs:
@@ -24,6 +27,10 @@ class _Componente:
         else:
             self.material = _Componente._INDEF
 
+    @abc.abstractmethod
+    def __str__(self):
+        return 'Componente'
+
     def __lshift__(self, other):
         """ Adiciona um objeto a montante e a jusante um do outro na forma `jusante` << `montante`"""
         if not isinstance(other, _Componente):
@@ -38,9 +45,6 @@ class _Componente:
             raise Warning(f'Ao adicionar {other} a {self}.'
                           f'Verificou-se que o diâmetro de {other} é maior que o de {self}')
         return other
-
-    def __str__(self):
-        return 'Componente'
 
     def detalhar(self):
         return f'Diâmetro: {self.diametro} mm\nMaterial: {self.material}'
@@ -111,6 +115,9 @@ class _Joelho(_Componente):
         else:
             raise ValueError('Você precisa especificar uma direção.'
                              'Use `direc` ou `direcao` com valores `BAIXO`, `HORIZONTAL` ou `CIMA`')
+
+    def __str__(self):
+        return 'Joelho de curva indefinida'
 
 
 class Joelho90(_Joelho):
@@ -231,11 +238,38 @@ class Registro(_Componente):
         return f'Registro de {self.tipo}'
 
 
-if __name__ == '__main__':
-    base = SaidaReservatorio(d=32, coluna=2, direc=HORIZONTAL)
-    base << Tubo(c=4) << T(e=HORIZONTAL).bifurcar(Tubo(c=5), direc=BAIXO)
-    t = base.acessar_bifurcacao().jusante_a
-    t << Joelho90(direc=HORIZONTAL)
-    base.ver_jusantes()
-    t.ver_jusantes()
+class PontoDeUtilizacao(_Componente):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.uso = None
+        if 'u' in kwargs:
+            self.uso = kwargs['u']
+        elif 'uso' in kwargs:
+            self.uso = kwargs['uso']
 
+        elif 'peso_relativo' in kwargs:
+            self.peso = kwargs['peso_relativo']
+        elif 'peso' in kwargs:
+            self.peso = kwargs['peso']
+        elif 'p' in kwargs:
+            self.peso = kwargs['p']
+
+        elif 'vazao' in kwargs:
+            self.peso = kwargs['vazao']
+        elif 'v' in kwargs:
+            self.peso = kwargs['v']
+
+        else:
+            raise ValueError('É necessário identificar algum tipo de uso do ponto de utilização, seja pelo uso'
+                             '(ver tabela de usos), seja pelo peso relativo, seja pela vazão de projeto (L/s).')
+
+    def __str__(self):
+        r = 'Ponto de utilização{}'
+        if self.uso:
+            return r.format(f' de {self.uso}.')
+        else:
+            return r.format('.')
+
+
+if __name__ == '__main__':
+    print(PontoDeUtilizacao(v=2))
