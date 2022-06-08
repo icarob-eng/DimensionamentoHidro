@@ -217,6 +217,20 @@ class SaidaReservatorio(_Componente):
             raise ValueError('Não é possível fazer conexões a montante da saída do reservatório.')
 
 
+class Registro(_Componente):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if 't' in kwargs:
+            self.tipo = kwargs['t']
+        elif 'tipo' in kwargs:
+            self.tipo = kwargs['tipo']
+        else:
+            self.tipo = 'Globo'  # define registro de globo como padrão
+
+    def __str__(self):
+        return f'Registro de {self.tipo}'
+
+
 if __name__ == '__main__':
     base = SaidaReservatorio(d=32, coluna=2, direc=HORIZONTAL)
     base << Tubo(c=4) << T(e=HORIZONTAL).bifurcar(Tubo(c=5), direc=BAIXO)
