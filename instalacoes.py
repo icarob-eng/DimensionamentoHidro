@@ -34,7 +34,6 @@ USOS = {
     'Tanque': (0.25, 0.7),
     'Torneira de Jardim': (0.2, 0.4)
 }
-
 usos = {k.lower(): v for k, v in USOS.items()}
 
 pols = (
@@ -48,7 +47,6 @@ pols = (
     '3',
     '4'
 )
-
 mms = (
     15,
     20,
@@ -98,12 +96,12 @@ class _Componente:
         else:
             self.material = _Componente._INDEF
 
-        if 't' in kwargs:
-            self.tipo = kwargs['t']
-        elif 'tipo' in kwargs:
-            self.tipo = kwargs['tipo']
+        if 'conexoes' in kwargs:
+            self.con = kwargs['conexoes']
+        elif 'con' in kwargs:
+            self.con = kwargs['con']
         else:
-            self.tipo = LL
+            self.con = LL
 
     @abc.abstractmethod
     def __str__(self):
@@ -394,6 +392,47 @@ class PontoDeUtilizacao(_Componente):
             return r.format(f' de {self.uso}.')
         else:
             return r.format('.')
+
+
+class Adaptador(_Componente):
+    # todo: joelho e tê de redução
+    TIPOS = (
+        # buchas: redução, fêmea-fêmea
+        'Bucha Curta',  # LL
+        'Bucha Longa',  # LL
+        'Bucha Roscável',  # RR
+        # nípel: roscável fêmea-fêmea
+        'Nípel',
+        # adaptador: sem redução, macho-fêmea
+        'Adaptador Curto',  # LR
+        # luva: normalmente sem redução, fêmea-fêmea
+        'Luva LL',
+        'Luva LR',
+        'Luva RR',
+        'Luva de Correr',  # LL
+        'Luva de Redução',  # LL
+        # bucha: redução roscável macho-fêmea
+        'Bucha',
+    )
+
+    tipos = (i.lower for i in TIPOS)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        kwargs = _Componente._adapt_kwargs(kwargs)
+
+        self.tipo = None
+        if 'tipo' in kwargs:
+            if kwargs['tipo'] in Adaptador.tipos:
+                self.tipo = kwargs['tipo']
+            else:
+                raise ValueError('Tipo de adaptador inválido')
+
+    def __str__(self):
+        if self.tipo:
+            return self.tipo
+        else:
+            return 'Adaptador não especificado'
 
 
 if __name__ == '__main__':
