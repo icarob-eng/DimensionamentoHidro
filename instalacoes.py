@@ -400,8 +400,8 @@ class Adaptador(_Componente):
         # buchas: redução, fêmea-fêmea
         'Bucha Curta',  # LL
         'Bucha Longa',  # LL
-        'Bucha Roscável',  # RR
-        # nípel: roscável fêmea-fêmea
+        'Bucha Roscável',  # RR (macho-fêmea
+        # nípel: roscável macho-macho
         'Nípel',
         # adaptador: sem redução, macho-fêmea
         'Adaptador Curto',  # LR
@@ -411,8 +411,6 @@ class Adaptador(_Componente):
         'Luva RR',
         'Luva de Correr',  # LL
         'Luva de Redução',  # LL
-        # bucha: redução roscável macho-fêmea
-        'Bucha',
     )
 
     tipos = (i.lower for i in TIPOS)
@@ -436,4 +434,4 @@ class Adaptador(_Componente):
 
 
 if __name__ == '__main__':
-    print(mm_em_pol(20))
+    pass
