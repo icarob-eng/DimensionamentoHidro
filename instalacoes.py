@@ -60,14 +60,14 @@ mms = (
 )
 
 
-def pol_em_mm(pol):
+def pol_em_mm(pol: str) -> int:
     if pol in pols:
         return mms[pols.index(pol)]
     else:
         raise ValueError('Valor em polegadas não é um valor válido. Exs de valores válidos: "3/4" e "3"')
 
 
-def mm_em_pol(mm):
+def mm_em_pol(mm: str | int) -> str:
     if mm in mms:
         return pols[mms.index(mm)]
     else:
@@ -78,7 +78,7 @@ class _Componente:
     _INDEF = '!definir!'
 
     @abc.abstractmethod
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: int | float | str):
         kwargs = _Componente._adapt_kwargs(kwargs)
 
         self.montante = None
@@ -107,7 +107,7 @@ class _Componente:
     def __str__(self):
         return 'Componente'
 
-    def __lshift__(self, other):
+    def __lshift__(self, other: '_Componente') -> '_Componente':
         """ Adiciona um objeto a montante e a jusante um do outro na forma `jusante` << `montante`"""
         if not isinstance(other, _Componente):
             raise ValueError(f'Erro ao adicionar {other} a {self}. {other} não parece ser um componente válido.')
@@ -123,9 +123,10 @@ class _Componente:
         return other
 
     @staticmethod
-    def _get_mm(val):
+    def _get_mm(val: int | str) -> int:
         """ Função responsável por tratar input de diâmetro e retornar. """
         if isinstance(val, int) or isinstance(val, float):  # se for um número
+            val = int(val)  # remove problemas de anotação de tipo
             mm_em_pol(val)  # levanta erro se o valor não for um valor válido
             return val  # retorna o número
         elif isinstance(val, str):  # se for uma string
@@ -142,14 +143,14 @@ class _Componente:
         raise ValueError('Valor de diâmetro inválido.')
 
     @staticmethod
-    def _adapt_kwargs(kwargs):
+    def _adapt_kwargs(kwargs: dict) -> dict:
         """ Adapta os argumentos para lower case, permitindo não ser case sensitive """
         nkwargs = {}
         for k, v in kwargs.items():
             nkwargs[k.lower()] = v
         return nkwargs
 
-    def detalhar(self):
+    def detalhar(self) -> str:
         return f'Diâmetro: {self.diametro} mm\nMaterial: {self.material}'
 
     def ver_jusantes(self):
@@ -172,7 +173,7 @@ class _Componente:
             except AttributeError:
                 break
 
-    def acessar_montante(self):
+    def acessar_montante(self) -> '_Componente':
         x = self.montante
         while True:
             try:
@@ -180,7 +181,7 @@ class _Componente:
             except AttributeError:
                 return x
 
-    def acessar_bifurcacao(self):
+    def acessar_bifurcacao(self) -> '_Componente':
         x = self.jusante
         while True:
             try:
@@ -190,7 +191,7 @@ class _Componente:
 
 
 class Tubo(_Componente):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: int | float | str):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -206,12 +207,12 @@ class Tubo(_Componente):
     def __str__(self):
         return 'Tubo'
 
-    def detalhar(self):
+    def detalhar(self) -> str:
         return super().detalhar() + f'\nComprimento: {self.comprimento}'
 
 
 class _Joelho(_Componente):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: int | str):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -248,7 +249,7 @@ class Curva45(_Joelho):
 
 
 class T(_Componente):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: int | str):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -268,13 +269,13 @@ class T(_Componente):
     def __str__(self):
         return 'Tê'
 
-    def __lshift__(self, other, **kwargs):
+    def __lshift__(self, other) -> None:
         raise Exception('Para bifurcações de Tês (quaisquer conexão a montante de um Tê), use o método'
                         '`t.bifurcar(componente, args).`\nSó podem ser feitas duas bifurcações por Tê.\n'
                         'Lembre-se de especificar a direção de saída usando `direc` ou `direcao` com valores'
                         '`CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`, nos args')
 
-    def bifurcar(self, other, **kwargs):
+    def bifurcar(self, other: _Componente, **kwargs: int) -> 'T':
         if not isinstance(other, _Componente):
             raise ValueError(f'Erro ao adicionar "{other}" a "{self}". "{other}" não parece ser um componente válido.')
         SaidaReservatorio.check_invalid_connection(other)
@@ -304,7 +305,7 @@ class T(_Componente):
 
 
 class SaidaReservatorio(_Componente):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: int | str):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -326,17 +327,17 @@ class SaidaReservatorio(_Componente):
     def __str__(self):
         return 'Saída do reservatório'
 
-    def detalhar(self):
+    def detalhar(self) -> str:
         return f'Altura máxima do reservatório: {self.coluna}\n' + super().detalhar()
 
     @staticmethod
-    def check_invalid_connection(other):
+    def check_invalid_connection(other) -> None:
         if isinstance(other, SaidaReservatorio):
             raise ValueError('Não é possível fazer conexões a montante da saída do reservatório.')
 
 
 class Registro(_Componente):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: int | str):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -352,7 +353,7 @@ class Registro(_Componente):
 
 
 class PontoDeUtilizacao(_Componente):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: int | float | str):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -415,7 +416,7 @@ class Adaptador(_Componente):
 
     tipos = (i.lower for i in TIPOS)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: int | str):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
