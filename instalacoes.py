@@ -145,7 +145,7 @@ class _Componente:
     def _adapt_kwargs(kwargs):
         """ Adapta os argumentos para lower case, permitindo não ser case sensitive """
         nkwargs = {}
-        for k, v in kwargs:
+        for k, v in kwargs.items():
             nkwargs[k.lower()] = v
         return nkwargs
 
