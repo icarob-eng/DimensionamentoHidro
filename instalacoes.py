@@ -1,4 +1,4 @@
-import abc
+from abc import abstractmethod
 
 # define direções que serão usadas como constantes de direção
 BAIXO = -1
@@ -77,7 +77,7 @@ def mm_em_pol(mm: str | int) -> str:
 class _Componente:
     _INDEF = '!definir!'
 
-    @abc.abstractmethod
+    @abstractmethod
     def __init__(self, **kwargs: int | float | str):
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -96,14 +96,20 @@ class _Componente:
         else:
             self.material = _Componente._INDEF
 
-        if 'conexoes' in kwargs:
-            self.con = kwargs['conexoes']
-        elif 'con' in kwargs:
-            self.con = kwargs['con']
+        if 'rosca' in kwargs:
+            self.rosca = kwargs['rosca']
+        elif 'r' in kwargs:
+            self.rosca = kwargs['r']
         else:
-            self.con = LL
+            self.rosca = LL
 
-    @abc.abstractmethod
+    @property
+    @abstractmethod
+    def con(self) -> str:
+        """ Função que deve retronar se o componente tem conexão macho ou fêmea"""
+        pass
+
+    @abstractmethod
     def __str__(self):
         return 'Componente'
 
@@ -150,7 +156,8 @@ class _Componente:
             nkwargs[k.lower()] = v
         return nkwargs
 
-    def detalhar(self) -> str:
+    @property
+    def detalhes(self) -> str:
         return f'Diâmetro: {self.diametro} mm\nMaterial: {self.material}'
 
     def ver_jusantes(self):
@@ -173,7 +180,8 @@ class _Componente:
             except AttributeError:
                 break
 
-    def acessar_montante(self) -> '_Componente':
+    @property
+    def primeiro_montante(self) -> '_Componente':
         x = self.montante
         while True:
             try:
@@ -181,7 +189,8 @@ class _Componente:
             except AttributeError:
                 return x
 
-    def acessar_bifurcacao(self) -> '_Componente':
+    @property
+    def proxima_bifurcacao(self) -> '_Componente':
         x = self.jusante
         while True:
             try:
@@ -207,8 +216,13 @@ class Tubo(_Componente):
     def __str__(self):
         return 'Tubo'
 
-    def detalhar(self) -> str:
-        return super().detalhar() + f'\nComprimento: {self.comprimento}'
+    @property
+    def con(self) -> str:
+        return 'MM'
+
+    @property
+    def detalhes(self) -> str:
+        return super().detalhes + f'\nComprimento: {self.comprimento}'
 
 
 class _Joelho(_Componente):
@@ -226,6 +240,10 @@ class _Joelho(_Componente):
 
     def __str__(self):
         return 'Joelho de curva indefinida'
+
+    @property
+    def con(self) -> str:
+        return 'FF'
 
 
 class Joelho90(_Joelho):
@@ -274,6 +292,10 @@ class T(_Componente):
                         '`t.bifurcar(componente, args).`\nSó podem ser feitas duas bifurcações por Tê.\n'
                         'Lembre-se de especificar a direção de saída usando `direc` ou `direcao` com valores'
                         '`CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`, nos args')
+
+    @property
+    def con(self) -> str:
+        return 'FF'
 
     def bifurcar(self, other: _Componente, **kwargs: int) -> 'T':
         if not isinstance(other, _Componente):
@@ -327,8 +349,13 @@ class SaidaReservatorio(_Componente):
     def __str__(self):
         return 'Saída do reservatório'
 
-    def detalhar(self) -> str:
-        return f'Altura máxima do reservatório: {self.coluna}\n' + super().detalhar()
+    @property
+    def detalhes(self) -> str:
+        return f'Altura máxima do reservatório: {self.coluna}\n' + super().detalhes
+
+    @property
+    def con(self) -> str:
+        return 'FF'
 
     @staticmethod
     def check_invalid_connection(other) -> None:
@@ -342,14 +369,28 @@ class Registro(_Componente):
         kwargs = _Componente._adapt_kwargs(kwargs)
 
         if 't' in kwargs:
-            self.tipo = kwargs['t']
+            self.tipo = kwargs['t'].lower()
         elif 'tipo' in kwargs:
-            self.tipo = kwargs['tipo']
+            self.tipo = kwargs['tipo'].lower()
         else:
-            self.tipo = 'Globo'  # define registro de globo como padrão
+            self.tipo = 'globo'  # define registro de globo como padrão
+
+        if self.con:  # serve para testar se o tipo é válido
+            pass
 
     def __str__(self):
         return f'Registro de {self.tipo}'
+
+    @property
+    def con(self) -> str:
+        if self.tipo == 'gaveta':
+            return 'FF'
+        elif self.tipo == 'pressão':
+            return 'FM'
+        elif self.tipo == 'globo':
+            return 'FF'
+        else:
+            ValueError('Tipo de registro não reconhecido, deve ser de: gaveta, pressão ou globo')
 
 
 class PontoDeUtilizacao(_Componente):
@@ -394,27 +435,29 @@ class PontoDeUtilizacao(_Componente):
         else:
             return r.format('.')
 
+    @property
+    def con(self) -> None:
+        return None
+
 
 class Adaptador(_Componente):
     # todo: joelho e tê de redução
-    TIPOS = (
-        # buchas: redução, fêmea-fêmea
-        'Bucha Curta',  # LL
-        'Bucha Longa',  # LL
-        'Bucha Roscável',  # RR (macho-fêmea
-        # nípel: roscável macho-macho
-        'Nípel',
-        # adaptador: sem redução, macho-fêmea
-        'Adaptador Curto',  # LR
-        # luva: normalmente sem redução, fêmea-fêmea
-        'Luva LL',
-        'Luva LR',
-        'Luva RR',
-        'Luva de Correr',  # LL
-        'Luva de Redução',  # LL
-    )
+    """ Estrutura: tipo: (rosca, macho ou fêmea, tem redução) """
+    TIPOS = {
+        'Bucha Curta': (LL, 'FF', True),
+        'Bucha Longa': (LL, 'FF', True),  # redução múltipla
+        'Bucha Roscável': (RR, 'MF', True),
+        'Nípel': (RR, 'MM', False),
+        'Adaptador': (LR, 'FM', False),  # atentar para direção da rosca
+        'Luva LR': (LR, 'MF', True),  # atentar para direção da rosca, com e sem redução
+        'Luva LL': (LL, 'FF', False),
+        'Luva RR': (RR, 'FF', False),
+        'Luva de Correr LL': (LL, 'FF', False),
+        'Luva de Correr RR': (RR, 'FF', False),
+        'Luva de Redução': (LL, 'FF', False),
+    }
 
-    tipos = (i.lower for i in TIPOS)
+    tipos = {k.lower(): v for k, v in TIPOS.items()}
 
     def __init__(self, **kwargs: int | str):
         super().__init__(**kwargs)
@@ -426,6 +469,16 @@ class Adaptador(_Componente):
                 self.tipo = kwargs['tipo']
             else:
                 raise ValueError('Tipo de adaptador inválido')
+
+    def validar_tipo(self):
+        dados = Adaptador.tipos[self.tipo]
+        if self.jusante:  # se jusante é definido
+            pass
+            # deve-se acessar as propriedades de jusante. Apenas Tês e Joelhos têm saídas não definidas quanto a rosca,
+            # ambos têm diâmetro definido. Todos os componentes exceto adaptadores têm saída Macho ou Fêmea definidos
+            # deve-se suportar tipo não especificado
+        if self.montante:  # se montante é definido
+            pass
 
     def __str__(self):
         if self.tipo:
