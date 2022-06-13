@@ -78,7 +78,7 @@ class _Componente:
     _INDEF = '!definir!'
 
     @abstractmethod
-    def __init__(self, **kwargs: int | float | str):
+    def __init__(self, **kwargs: int | float | str | (bool, bool)):
         kwargs = _Componente._adapt_kwargs(kwargs)
 
         self.montante = None
@@ -106,7 +106,7 @@ class _Componente:
     @property
     @abstractmethod
     def con(self) -> str:
-        """ Função que deve retronar se o componente tem conexão macho ou fêmea"""
+        """ Função que deve retornar se o componente tem conexão macho ou fêmea"""
         pass
 
     @abstractmethod
@@ -200,7 +200,7 @@ class _Componente:
 
 
 class Tubo(_Componente):
-    def __init__(self, **kwargs: int | float | str):
+    def __init__(self, **kwargs: int | float | str | (bool, bool)):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -226,7 +226,7 @@ class Tubo(_Componente):
 
 
 class _Joelho(_Componente):
-    def __init__(self, **kwargs: int | str):
+    def __init__(self, **kwargs: int | str | (bool, bool)):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -267,7 +267,7 @@ class Curva45(_Joelho):
 
 
 class T(_Componente):
-    def __init__(self, **kwargs: int | str):
+    def __init__(self, **kwargs: int | str | (bool, bool)):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -327,7 +327,7 @@ class T(_Componente):
 
 
 class SaidaReservatorio(_Componente):
-    def __init__(self, **kwargs: int | str):
+    def __init__(self, **kwargs: int | str | (bool, bool)):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -364,7 +364,7 @@ class SaidaReservatorio(_Componente):
 
 
 class Registro(_Componente):
-    def __init__(self, **kwargs: int | str):
+    def __init__(self, **kwargs: int | str | (bool, bool)):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -394,7 +394,7 @@ class Registro(_Componente):
 
 
 class PontoDeUtilizacao(_Componente):
-    def __init__(self, **kwargs: int | float | str):
+    def __init__(self, **kwargs: int | float | str | (bool, bool)):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -441,21 +441,19 @@ class PontoDeUtilizacao(_Componente):
 
 
 class Adaptador(_Componente):
-    # todo: joelho e tê de redução
     """ Estrutura: tipo: (rosca, macho ou fêmea, tem redução) """
     TIPOS = {
-        'Bucha Curta': (LL, 'FF', True),
+        'Bucha Curta': (LL, 'MF', True),
         'Bucha Longa': (LL, 'FF', True),  # redução múltipla
         'Bucha Roscável': (RR, 'MF', True),
         'Nípel': (RR, 'MM', False),
         'Adaptador': (LR, 'FM', False),  # atentar para direção da rosca
-        'Luva LR': (LR, 'MF', True),  # atentar para direção da rosca, com e sem redução
+        'Luva LR': (LR, 'FF', True),  # atentar para direção da rosca, com e sem redução
         'Luva LL': (LL, 'FF', False),
         'Luva RR': (RR, 'FF', False),
-        'Luva de Correr LL': (LL, 'FF', False),
-        'Luva de Correr RR': (RR, 'FF', False),
-        'Luva de Redução': (LL, 'FF', False),
-    }
+        'Luva de Redução LL': (LL, 'FF', True),
+        'Luva de Redução RR': (RR, 'FF', True),
+    }  # luvas de correr removidas, pois se tratam apenas de um facilitador de execução
 
     tipos = {k.lower(): v for k, v in TIPOS.items()}
 
@@ -470,15 +468,19 @@ class Adaptador(_Componente):
             else:
                 raise ValueError('Tipo de adaptador inválido')
 
-    def validar_tipo(self):
-        dados = Adaptador.tipos[self.tipo]
-        if self.jusante:  # se jusante é definido
-            pass
-            # deve-se acessar as propriedades de jusante. Apenas Tês e Joelhos têm saídas não definidas quanto a rosca,
-            # ambos têm diâmetro definido. Todos os componentes exceto adaptadores têm saída Macho ou Fêmea definidos
-            # deve-se suportar tipo não especificado
-        if self.montante:  # se montante é definido
-            pass
+    def inferir_tipo(self):
+        if self.jusante and self.montante:  # se jusante e montante forem definidos
+            jus: '_Componente' = self.jusante
+            dados_jus = (jus.rosca[1], jus.con[1], jus.diametro)
+            mon: '_Componente' = self.montante
+            dados_mon = (mon.rosca[0], mon.con[0], mon.diametro)
+
+            # todo: como fazer seleção: checar opções possíveis para montante e para jusante separadamente.
+            #  se um acessório tiver nas duas listas, ele é a solução (impossível ter dois acessórios,
+            #  pois todos são únicos). Senão, criar um par de acessórios que resolva.
+            #  montar quadro com todas as soluções.
+        else:
+            ValueError('Imporssível inferir tipo sem montante e jusante definidos')
 
     def __str__(self):
         if self.tipo:
