@@ -30,17 +30,18 @@ Ver tabela de diâmetros.
 
 | Nome | Liso / Roscável | Macho / Fêmea | Redução |
 | ---- | --------------- | ------------- | -------- |
-| Bucha Curta | LL | Fêmea - Fêmea | Sim |
+| Bucha Curta | LL | Macho - Fêmea | Sim |
 | Bucha Longa | LL | Fêmea - Fêmea | Bastante |
 | Bucha Roscável | RR | Macho - Fêmea | Sim |
 | Nípel | RR | Macho - Macho | Não |
 | Adaptador | LR | Macho (R) - Fêmea (L) | Não |
-| Luva LR | LR | Macho (L) - Fêmea (R) | Ambos |
+| Luva LR | LR | Fêmea Fêmea | Ambos |
 | Luva LL | LL | Fêmea - Fêmea | Não |
 | Luva RR | RR | Fêmea - Fêmea | Não |
 | Luva de Correr LL | LL | Fêmea - Fêmea | Não |
 | Luva de Correr RR | RR | Fêmea - Fêmea | Não |
-| Luva de Redução | LL | Fêmea - Fêmea | Sim |
+| Luva de Redução LL | LL | Fêmea - Fêmea | Sim |
+| Luva de Redução RR | RR | Fêmea - Fêmea | Sim |
 
 
 ## Bibliografía
