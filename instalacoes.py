@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from math import ceil
 
 # define direções que serão usadas como constantes de direção
 BAIXO = -1
@@ -74,11 +75,30 @@ def mm_em_pol(mm: str | int) -> str:
         raise ValueError('Valor em milímetros não é um valor padrão')
 
 
+bolsas = (
+    16,
+    19,
+    22,
+    26,
+    31,
+    36,
+    43,
+    48,
+    61
+)
+
+
+def comp_min(d: int) -> float:
+    """ Retorna o comprimento mínimo em metros de um tubo para permite a conexão de dois acessórios fêmea de mesmo
+    diâmetro. """
+    return ceil(bolsas[mms.index(d)] / 10)/10 * 2
+
+
 class _Componente:
     _INDEF = '!definir!'
 
     @abstractmethod
-    def __init__(self, **kwargs: int | float | str | (bool, bool)):
+    def __init__(self, **kwargs: int | float | str | tuple[bool, bool]):
         kwargs = _Componente._adapt_kwargs(kwargs)
 
         self.montante = None
@@ -198,12 +218,52 @@ class _Componente:
             except AttributeError:
                 return x
 
+    @staticmethod
+    def _criar_adaptador(tipo: str, diametro: int) -> '_Componente':
+        if tipo == 'tubo':
+            return Tubo(diametro=diametro, comprimento=comp_min(diametro))
+        else:
+            return Adaptador(tipo=tipo)
+
+    @staticmethod
+    def resolver_con(montante: '_Componente', jusante: '_Componente'):
+        if isinstance(montante.diametro, int) and isinstance(jusante.diametro, int):
+            # busca a solução na tabela de soluções
+            solucao = Adaptador.solucoes[(
+                montante.diametro > jusante.diametro,
+                (montante.rosca[1], jusante.rosca[0]),
+                (montante.con[1] + jusante.con[0])
+            )]
+
+            if isinstance(solucao, str):  # se não for uma tupla, resolve o sistema na hor
+                montante << _Componente._criar_adaptador(solucao, montante.diametro) << jusante
+            else:
+                dims = [montante.diametro]  # lista que conterá o diâmetro de cada componente
+                for i in range(len(solucao) - 1):
+                    if solucao[i] == 'tubo' or not Adaptador.tipos[solucao[i]][2]:
+                        # checa se o item anterior é um tubo ou se não é redução na lista de tipos
+                        # veja que o item anterior já terá diâmetro definido,
+                        # estamos adicionando a lista o valor de i+1
+                        dims.append(dims[i])  # se não tem redução, repete o diâmetro
+                    else:
+                        dims.append(jusante.diametro)
+                comps: list['_Componente'] = list(map(_Componente._criar_adaptador, solucao, dims))
+                montante << comps[0]
+                for i in range(len(comps) - 1):
+                    comps[i] << comps[i + 1]
+                comps[-1] << jusante
+        else:
+            ValueError('Erro ao definir adaptadores:'
+                       'peças a montante e a jusante da conexão precisam ter diâmetro definido')
+#
+
 
 class Tubo(_Componente):
-    def __init__(self, **kwargs: int | float | str | (bool, bool)):
+    def __init__(self, **kwargs: int | float | str | tuple[bool, bool]):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
+        self.comprimento: float  # comprimento em metros
         if 'c' in kwargs:
             self.comprimento = kwargs['c']
         elif 'comp' in kwargs:
@@ -226,7 +286,7 @@ class Tubo(_Componente):
 
 
 class _Joelho(_Componente):
-    def __init__(self, **kwargs: int | str | (bool, bool)):
+    def __init__(self, **kwargs: int | str | tuple[bool, bool]):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -267,7 +327,7 @@ class Curva45(_Joelho):
 
 
 class T(_Componente):
-    def __init__(self, **kwargs: int | str | (bool, bool)):
+    def __init__(self, **kwargs: int | str | tuple[bool, bool]):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -327,7 +387,7 @@ class T(_Componente):
 
 
 class SaidaReservatorio(_Componente):
-    def __init__(self, **kwargs: int | str | (bool, bool)):
+    def __init__(self, **kwargs: int | str | tuple[bool, bool]):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -364,7 +424,7 @@ class SaidaReservatorio(_Componente):
 
 
 class Registro(_Componente):
-    def __init__(self, **kwargs: int | str | (bool, bool)):
+    def __init__(self, **kwargs: int | str | tuple[bool, bool]):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -377,6 +437,14 @@ class Registro(_Componente):
 
         if self.con:  # serve para testar se o tipo é válido
             pass
+
+        if self.tipo == 'gaveta':
+            self.rosca = RR
+        elif self.tipo == 'pressão':
+            self.rosca = RR
+        elif self.tipo == 'globo':
+            self.rosca = LL
+
 
     def __str__(self):
         return f'Registro de {self.tipo}'
@@ -394,7 +462,7 @@ class Registro(_Componente):
 
 
 class PontoDeUtilizacao(_Componente):
-    def __init__(self, **kwargs: int | float | str | (bool, bool)):
+    def __init__(self, **kwargs: int | float | str | tuple[bool, bool]):
         super().__init__(**kwargs)
         kwargs = _Componente._adapt_kwargs(kwargs)
 
@@ -448,7 +516,7 @@ class Adaptador(_Componente):
         'Bucha Roscável': (RR, 'MF', True),
         'Nípel': (RR, 'MM', False),
         'Adaptador': (LR, 'FM', False),  # atentar para direção da rosca
-        'Luva LR': (LR, 'FF', True),  # atentar para direção da rosca, com e sem redução
+        'Luva RL': (LR, 'FF', True),  # atentar para direção da rosca, com e sem redução
         'Luva LL': (LL, 'FF', False),
         'Luva RR': (RR, 'FF', False),
         'Luva de Redução LL': (LL, 'FF', True),
@@ -456,6 +524,44 @@ class Adaptador(_Componente):
     }  # luvas de correr removidas, pois se tratam apenas de um facilitador de execução
 
     tipos = {k.lower(): v for k, v in TIPOS.items()}
+
+    """ Estrutura de SOLUCOES: (tem redução, tem rosca, tipo de conexão): (componentes)"""
+    SOLUCOES = {
+        (False, LL, 'FF'): 'Tubo',
+        (False, LL, 'MF'): ('Luva LL', 'Tubo'),
+        (False, LL, 'FM'): ('Tubo', 'Luva LL'),
+        (False, LL, 'MM'): 'Luva LL',
+        (False, RL, 'FF'): ('Adaptador', 'Tubo'),
+        (False, RL, 'MF'): ('Luva RL', 'Tubo'),
+        (False, RL, 'FM'): 'Adaptador',
+        (False, RL, 'MM'): 'Luva RL',
+        (False, LR, 'FF'): ('Tubo', 'Adaptador'),  # resolver isso
+        (False, LR, 'MF'): 'Adaptador',  # resolver isso
+        (False, LR, 'FM'): ('Tubo', 'Luva RL'),
+        (False, LR, 'MM'): 'Luva RL',
+        (False, RR, 'FF'): 'Nípel',
+        (False, RR, 'MF'): ('Luva RR', 'Nípel'),
+        (False, RR, 'FM'): ('Nípel', 'Luva RR'),
+        (False, RR, 'MM'): 'Luva RR',
+        (True, LL, 'FF'): ('Bucha Curta', 'Tubo'),
+        (True, LL, 'MF'): ('Luva de Redução LL', 'Tubo'),
+        (True, LL, 'FM'): 'Bucha Curta',
+        (True, LL, 'MM'): 'Luva de Redução LL',
+        (True, RL, 'FF'): ('Adaptador', 'Bucha Curta'),
+        (True, RL, 'MF'): ('Luva RL', 'Tubo'),
+        (True, RL, 'FM'): ('Adaptador', 'Bucha Curta'),
+        (True, RL, 'MM'): 'Luva RL',
+        (True, LR, 'FF'): ('Tubo', 'Luva RL', 'Nípel'),
+        (True, LR, 'MF'): ('Luva de Redução LL', 'Tubo', 'Adaptador'),
+        (True, LR, 'FM'): ('Tubo', 'Luva RL'),
+        (True, LR, 'MM'): 'Luva RL',
+        (True, RR, 'FF'): ('Nípel', 'Luva de Redução RR', 'Nípel'),
+        (True, RR, 'MF'): 'Bucha Roscável',
+        (True, RR, 'FM'): ('Nípel', 'Luva de Redução RR'),
+        (True, RR, 'MM'): ('Bucha Roscável', 'Luva RR'),
+    }
+
+    solucoes = {k: tuple(i.lower() for i in v) for k, v in SOLUCOES.items()}
 
     def __init__(self, **kwargs: int | str):
         super().__init__(**kwargs)
@@ -467,20 +573,6 @@ class Adaptador(_Componente):
                 self.tipo = kwargs['tipo']
             else:
                 raise ValueError('Tipo de adaptador inválido')
-
-    def inferir_tipo(self):
-        if self.jusante and self.montante:  # se jusante e montante forem definidos
-            jus: '_Componente' = self.jusante
-            dados_jus = (jus.rosca[1], jus.con[1], jus.diametro)
-            mon: '_Componente' = self.montante
-            dados_mon = (mon.rosca[0], mon.con[0], mon.diametro)
-
-            # todo: como fazer seleção: checar opções possíveis para montante e para jusante separadamente.
-            #  se um acessório tiver nas duas listas, ele é a solução (impossível ter dois acessórios,
-            #  pois todos são únicos). Senão, criar um par de acessórios que resolva.
-            #  montar quadro com todas as soluções.
-        else:
-            ValueError('Imporssível inferir tipo sem montante e jusante definidos')
 
     def __str__(self):
         if self.tipo:

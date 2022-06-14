@@ -68,7 +68,22 @@ Existe um número limitado de possíveis conexões diferentes, assim é possíve
 | RR + MF | Luva RR + Nípel              | Bucha Roscável                                                 |
 | RR + FM | Nípel + Luva RR              | Nípel + Luva de Redução RR                                     |
 | RR + MM | Luva RR                      | Bucha Roscável + Luva RR                                       |
-
+Bucha Curta + Tubo                                            
+Luva de redução + Tubo                                        
+Bucha Curta                                                   
+Luva de Redução<br/>(ou Bucha Longa)                          
+Adaptador + Bucha Curta + Tubo<br/>(ou Nípel + Luva RL + Tubo)
+Luva RL + Tubo                                                
+Adaptador + Bucha Curta                                       
+Luva RL                                                       
+Tubo + Luva RL + Nípel                                        
+Luva de Redução LL + Tubo + Adaptador                         
+Tubo + Luva RL                                                
+Luva LR                                                       
+Nípel + Luva de Redução RR + Nípel                            
+Bucha Roscável                                                
+Nípel + Luva de Redução RR                                    
+Bucha Roscável + Luva RR                                      
 A solução para conexões fêmea a jusante são tubos, sem bolsa, portanto, machos,
 uma vêz que não há adaptadores com macho a jusante. Para saber o comprimento do tubo,
 consulte tabela de Diâmetros em mm, polegadas e Comprimentos de bolsas de um acessório.
