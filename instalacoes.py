@@ -14,6 +14,8 @@ LR = (False, True)
 RL = (True, False)
 RR = (True, True)
 
+testes = False  # variável que faz com que se valide a conexão entre os componentes
+
 """ USOS:
     Formato: 'nome': (vazão, peso relativo)
 """
@@ -147,8 +149,9 @@ class _Componente:
         return other
 
     def _validate_con(self, other: '_Componente') -> str | None:
+        """ Retorna uma string de erro ou None se não houver nenhum erro. """
         # self: montante, other: jusante
-        if not isinstance(other, _Componente):
+        if not isinstance(other, _Componente) and testes:
             raise ValueError(f'Erro ao adicionar {other} a {self}. {other} não parece ser um componente válido.')
         SaidaReservatorio.check_invalid_connection(other)
 
@@ -170,7 +173,6 @@ class _Componente:
             )
         if self.diametro < other.diametro:
             error_string += f'O diâmetro de {other} é maior que o de {self};'
-            # todo: pensar em exclusão a isso
 
         if error_string != start:  # se houve alteração na string base
             return error_string
@@ -260,6 +262,7 @@ class _Componente:
         if isinstance(montante.diametro, int) and isinstance(jusante.diametro, int):
             if isinstance(montante, T):
                 # substitui o Tê por um tubo na direção especificada, para simplificar a resolução
+                # todo: considerações para Tê roscável
                 tubo = Tubo(diametro=montante.diametro, comprimento=comp_min(montante.diametro))
 
                 if 'e' in kwargs:
