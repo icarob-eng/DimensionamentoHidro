@@ -255,8 +255,25 @@ class _Componente:
             return Adaptador(tipo=tipo)
 
     @staticmethod
-    def resolver_con(montante: '_Componente', jusante: '_Componente'):
+    def resolver_con(montante: '_Componente', jusante: '_Componente', **kwargs):
+        """ Método que cria adaptadores para resolver uma conexão. """
         if isinstance(montante.diametro, int) and isinstance(jusante.diametro, int):
+            if isinstance(montante, T):
+                # substitui o Tê por um tubo na direção especificada, para simplificar a resolução
+                tubo = Tubo(diametro=montante.diametro, comprimento=comp_min(montante.diametro))
+
+                if 'e' in kwargs:
+                    entrada = kwargs['e']
+                elif 'entrada' in kwargs:
+                    entrada = kwargs['entrada']
+                else:
+                    raise ValueError('Usando um Tê como montante na função resolver_con,'
+                                     'é necessário especificar a conexão de entrada.'
+                                     'Use `e` ou `entrada` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
+
+                montante.bifurcar(tubo, entrada=entrada)
+                montante = tubo
+
             # busca a solução na tabela de soluções
             solucao = Adaptador.solucoes[(
                 montante.diametro > jusante.diametro,
@@ -387,9 +404,9 @@ class T(_Componente):
         return 'FF'
 
     def bifurcar(self, other: _Componente, **kwargs: int) -> 'T':
-        if not isinstance(other, _Componente):
-            raise ValueError(f'Erro ao adicionar "{other}" a "{self}". "{other}" não parece ser um componente válido.')
-        SaidaReservatorio.check_invalid_connection(other)
+        """ Método de bifurcar se faz necessário para o argumento de direção de saída."""
+        if self._validate_con(other):
+            ValueError(self._validate_con(other))
 
         if not self.jusante_a:
             if 'direc' in kwargs:
@@ -473,7 +490,6 @@ class Registro(_Componente):
             self.rosca = RR
         elif self.tipo == 'globo':
             self.rosca = LL
-
 
     def __str__(self):
         return f'Registro de {self.tipo}'
