@@ -148,28 +148,52 @@ class _Componente:
             other.diametro = self.diametro
         return other
 
-    def _validate_con(self, other: '_Componente') -> str | None:
+    def _validate_con(self, other: '_Componente', **kwargs) -> str | None:
         """ Retorna uma string de erro ou None se não houver nenhum erro. """
         # self: montante, other: jusante
         if not isinstance(other, _Componente) and testes:
             raise ValueError(f'Erro ao adicionar {other} a {self}. {other} não parece ser um componente válido.')
         SaidaReservatorio.check_invalid_connection(other)
 
+        # se for um tê a conexão a montante e jusante serão outras
+        if isinstance(self, T):
+            if 'e-m' in kwargs:
+                e_m = kwargs['e-m']
+            elif 'entrada-m' in kwargs:
+                e_m = kwargs['entrada-m']
+            else:
+                raise ValueError('Você precisa especificar a conexão de entrada do Tê a montante.'
+                                 'Use `e-m` ou `entrada-m` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
+            m = 0 if e_m == CENTRO else 1
+        else:
+            m = 1
+        if isinstance(other, T):
+            if 'e-j' in kwargs:
+                e_j = kwargs['e-j']
+            elif 'entrada_j' in kwargs:
+                e_j = kwargs['entrada-j']
+            else:
+                raise ValueError('Você precisa especificar a conexão de entrada do Tê a montante.'
+                                 'Use `e-j` ou `entrada-j` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
+            j = 1 if e_j == CENTRO else 0
+        else:
+            j = 0
+
         error_string = start = f'{self} não pode se conectar com {other}, pois:'
         base = '\nA conexão jusante de {} é {} e a conexão jusante de {} é {};'
-        if not self.rosca[1] == other.rosca[0]:
+        if not self.rosca[m] == other.rosca[j]:
             error_string += base.format(
                 self,
-                'roscável' if self.rosca[1] else 'liso',
+                'roscável' if self.rosca[m] else 'liso',
                 other,
-                'roscável' if other.rosca[0] else 'liso'
+                'roscável' if other.rosca[j] else 'liso'
             )
-        if not self.con[1] == other.con[0]:
+        if not self.con[m] == other.con[j]:
             error_string += base.format(
                 self,
-                'fêmea' if self.con[1] == 'F' else 'macho',
+                'fêmea' if self.con[m] == 'F' else 'macho',
                 other,
-                'fêmea' if other.con[0] == 'F' else 'macho'
+                'fêmea' if other.con[j] == 'F' else 'macho'
             )
         if self.diametro < other.diametro:
             error_string += f'O diâmetro de {other} é maior que o de {self};'
@@ -261,10 +285,7 @@ class _Componente:
         """ Método que cria adaptadores para resolver uma conexão. """
         if isinstance(montante.diametro, int) and isinstance(jusante.diametro, int):
             if isinstance(montante, T):
-                # substitui o Tê por um tubo na direção especificada, para simplificar a resolução
-                # todo: considerações para Tê roscável
-                tubo = Tubo(diametro=montante.diametro, comprimento=comp_min(montante.diametro))
-
+                # substitui o Tê por um tubo ou nípel na direção especificada, para simplificar a resolução
                 if 'e' in kwargs:
                     entrada = kwargs['e']
                 elif 'entrada' in kwargs:
@@ -274,8 +295,14 @@ class _Componente:
                                      'é necessário especificar a conexão de entrada.'
                                      'Use `e` ou `entrada` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
 
-                montante.bifurcar(tubo, entrada=entrada)
-                montante = tubo
+                if (entrada == CENTRO and montante.rosca[0]) or (entrada != CENTRO and montante.rosca[1]):
+                    # se a entrada selecionada for roscada
+                    substituto = Adaptador(diametro=montante.diametro, tipo='Nípel')
+                else:
+                    substituto = Tubo(diametro=montante.diametro, comprimento=comp_min(montante.diametro))
+
+                montante.bifurcar(substituto, entrada=entrada)
+                montante = substituto
 
             # busca a solução na tabela de soluções
             solucao = Adaptador.solucoes[(
