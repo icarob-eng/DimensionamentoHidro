@@ -135,18 +135,47 @@ class _Componente:
 
     def __lshift__(self, other: '_Componente') -> '_Componente':
         """ Adiciona um objeto a montante e a jusante um do outro na forma `jusante` << `montante`"""
-        if not isinstance(other, _Componente):
-            raise ValueError(f'Erro ao adicionar {other} a {self}. {other} não parece ser um componente válido.')
-        SaidaReservatorio.check_invalid_connection(other)
+
+        # teste de conexão:
+        if self._validate_con(other):
+            ValueError(self._validate_con(other))  # ValueError lançado aqui para ficar clara a origem do erro
 
         self.jusante = other
         other.montante = self
         if other.diametro == _Componente._INDEF:
             other.diametro = self.diametro
-        elif other.diametro > self.diametro:
-            raise Warning(f'Ao adicionar {other} a {self}.'
-                          f'Verificou-se que o diâmetro de {other} é maior que o de {self}')
         return other
+
+    def _validate_con(self, other: '_Componente') -> str | None:
+        # self: montante, other: jusante
+        if not isinstance(other, _Componente):
+            raise ValueError(f'Erro ao adicionar {other} a {self}. {other} não parece ser um componente válido.')
+        SaidaReservatorio.check_invalid_connection(other)
+
+        error_string = start = f'{self} não pode se conectar com {other}, pois:'
+        base = '\nA conexão jusante de {} é {} e a conexão jusante de {} é {};'
+        if not self.rosca[1] == other.rosca[0]:
+            error_string += base.format(
+                self,
+                'roscável' if self.rosca[1] else 'liso',
+                other,
+                'roscável' if other.rosca[0] else 'liso'
+            )
+        if not self.con[1] == other.con[0]:
+            error_string += base.format(
+                self,
+                'fêmea' if self.con[1] == 'F' else 'macho',
+                other,
+                'fêmea' if other.con[0] == 'F' else 'macho'
+            )
+        if self.diametro < other.diametro:
+            error_string += f'O diâmetro de {other} é maior que o de {self};'
+            # todo: pensar em exclusão a isso
+
+        if error_string != start:  # se houve alteração na string base
+            return error_string
+        else:
+            return None
 
     @staticmethod
     def _get_mm(val: int | str) -> int:
