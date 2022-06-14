@@ -53,9 +53,9 @@ Existe um número limitado de possíveis conexões diferentes, assim é possíve
 | Conexão | Solução p/ mesmo diâmetro    | Solução c/ redução                                             |
 |---------|------------------------------|----------------------------------------------------------------|
 | LL + FF | Trecho de Tubo               | Bucha Curta + Tubo                                             |
-| LL + MF | Luva LL + Tubo               | Luva de redução + Tubo                                         |
+| LL + MF | Luva LL + Tubo               | Luva de Redução LL + Tubo                                      |
 | LL + FM | Tubo + Luva LL               | Bucha Curta                                                    |
-| LL + MM | Luva LL                      | Luva de Redução<br/>(ou Bucha Longa)                           |
+| LL + MM | Luva LL                      | Luva de Redução LL<br/>(ou Bucha Longa)                        |
 | RL + FF | Adaptador + Tubo             | Adaptador + Bucha Curta + Tubo<br/>(ou Nípel + Luva RL + Tubo) |
 | RL + MF | Luva RL + Tubo               | Luva RL + Tubo                                                 |
 | RL + FM | Adaptador                    | Adaptador + Bucha Curta                                        |
