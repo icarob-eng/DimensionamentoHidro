@@ -4,17 +4,19 @@ Este arquivo contém tabelas e referências das tabelas que servem de base para 
 ## Equivalência de diâmetros comerciais
 Tubos podem ter diversos diâmetros, mas no mercado só se produzem alguns diâmetros comerciais. Exemplos:
 
-| mm  | pol   |
-|-----|-------|
-| 15  | 1/2   |
-| 20  | 3/4   |
-| 25  | 1     |
-| 32  | 1 1/4 |
-| 40  | 1 1/2 |
-| 50  | 2     |
-| 60  | 2 1/2 |
-| 75  | 3     |
-| 100 | 4     |
+| mm  | pol   | Bolsa (mm) |
+|-----|-------|------------|
+| 15  | 1/2   | 16         |
+| 20  | 3/4   | 19         |
+| 25  | 1     | 22         |
+| 32  | 1 1/4 | 26         |
+| 40  | 1 1/2 | 31         |
+| 50  | 2     | 36         |
+| 60  | 2 1/2 | 43         |
+| 75  | 3     | 48         |
+| 100 | 4     | 61         |
+
+Sobre a bolsa, trata-se do comprimento que um tubo macho entra num tubo fêmea.
 
 ## Adaptadores
 Existem adaptadores de vários tipos, formas e funções, esta tabela baseada no catálogo da krona deve ajudar a entender.
@@ -69,7 +71,7 @@ Existe um número limitado de possíveis conexões diferentes, assim é possíve
 
 A solução para conexões fêmea a jusante são tubos, sem bolsa, portanto, machos,
 uma vêz que não há adaptadores com macho a jusante. Para saber o comprimento do tubo,
-consulte tabela de Diâmetro vs Bolsa do de um acessório.
+consulte tabela de Diâmetros em mm, polegadas e Comprimentos de bolsas de um acessório.
 
 ## Bibliografia
 1. http://docente.ifrn.edu.br/carlindoneto/disciplinas/instalacoes-hidrossanitarias-i/tabelas
