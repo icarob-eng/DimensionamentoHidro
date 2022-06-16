@@ -199,9 +199,15 @@ class _Componente:
             error_string += f'O diâmetro de {other} é maior que o de {self};'
 
         if error_string != start:  # se houve alteração na string base
-            return error_string
-        else:
-            return None
+            if isinstance(other, Adaptador) and not other._invertido:
+                # se for um adaptador e não for invertido, inverte e testa de novo
+                # não gera recursão infinita devido ao _invertido
+                other._inverter_con()
+                if self._validate_con(other):
+                    return error_string
+            else:
+                return error_string
+        return None
 
     @staticmethod
     def _get_mm(val: int | str) -> int:
@@ -610,8 +616,8 @@ class Adaptador(_Componente):
         (False, RL, 'MF'): ('Luva RL', 'Tubo'),
         (False, RL, 'FM'): 'Adaptador',
         (False, RL, 'MM'): 'Luva RL',
-        (False, LR, 'FF'): ('Tubo', 'Adaptador'),  # resolver isso
-        (False, LR, 'MF'): 'Adaptador',  # resolver isso
+        (False, LR, 'FF'): ('Tubo', 'Adaptador'),
+        (False, LR, 'MF'): 'Adaptador',
         (False, LR, 'FM'): ('Tubo', 'Luva RL'),
         (False, LR, 'MM'): 'Luva RL',
         (False, RR, 'FF'): 'Nípel',
@@ -649,11 +655,29 @@ class Adaptador(_Componente):
             else:
                 raise ValueError('Tipo de adaptador inválido')
 
+        self._invertido = False  # variável que altera a leitura do tipo na função `con()`
+
     def __str__(self):
         if self.tipo:
             return self.tipo
         else:
             return 'Adaptador não especificado'
+
+    def _inverter_con(self):
+        """ Inverte as conexões de uma peça, se não for de redução. """
+        if Adaptador.tipos[self.tipo][2]:  # se tiver redução de diâmetro
+            self._invertido = True
+            self.rosca = (not self.rosca[0], not self.rosca[1])
+        else:
+            raise ValueError(f'Impossível inverter direção de {self.tipo}, pois este adaptador possui redução.')
+
+    @property
+    def con(self) -> str:
+        r = Adaptador.tipos[self.tipo][1]
+        if not self._invertido:
+            return r
+        else:  # se for invertido
+            return r[1] + r[0]  # inverte e concatena a string
 
 
 if __name__ == '__main__':
