@@ -4,25 +4,25 @@ Este arquivo contém tabelas e referências das tabelas que servem de base para 
 ## Equivalência de diâmetros comerciais
 Tubos podem ter diversos diâmetros, mas no mercado só se produzem alguns diâmetros comerciais. Exemplos:
 
-| mm  | pol   | Bolsa (mm) |
-|-----|-------|------------|
-| 15  | 1/2   | 16         |
-| 20  | 3/4   | 19         |
-| 25  | 1     | 22         |
-| 32  | 1 1/4 | 26         |
-| 40  | 1 1/2 | 31         |
-| 50  | 2     | 36         |
-| 60  | 2 1/2 | 43         |
-| 75  | 3     | 48         |
-| 100 | 4     | 61         |
+| mm  | pol   | Bolsa Usada (mm) |
+|-----|-------|------------------|
+| 15  | 1/2   | 16               |
+| 20  | 3/4   | 19               |
+| 25  | 1     | 22               |
+| 32  | 1 1/4 | 26               |
+| 40  | 1 1/2 | 31               |
+| 50  | 2     | 36               |
+| 60  | 2 1/2 | 43               |
+| 75  | 3     | 48               |
+| 100 | 4     | 61               |
 
 Sobre a bolsa, trata-se do comprimento que um tubo macho entra num tubo fêmea.
 
-## Adaptadores
+## Adaptadores e conexões
 Existem adaptadores de vários tipos, formas e funções, esta tabela baseada no catálogo da krona deve ajudar a entender.
 
 **Conexões lisas** (ou soldáveis) são conexões que precisam de solda (como uma cola), para serem efetuadas. **Conexões roscáveis** podem ser feitas
-e desfeitas, mas as vezes podem ser piores para se executar em campo. Você não pode conectar uma peça soldável diretamente numa roscável.
+e desfeitas, mas às vezes podem ser piores para se executar em campo. Você não pode conectar uma peça soldável diretamente numa roscável.
 
 **Conexões macho** entram em **conexões fêmea**. Você não óde conectar uma peça macho com outra macho, nem uma fêmea com outra fêmea, pois elas não terão
 contato interno para se conectarem. ~~Não me critique, eu não criei esse padrão~~
@@ -68,25 +68,55 @@ Existe um número limitado de possíveis conexões diferentes, assim é possíve
 | RR + MF | Luva RR + Nípel              | Bucha Roscável                                                 |
 | RR + FM | Nípel + Luva RR              | Nípel + Luva de Redução RR                                     |
 | RR + MM | Luva RR                      | Bucha Roscável + Luva RR                                       |
-Bucha Curta + Tubo                                            
-Luva de redução + Tubo                                        
-Bucha Curta                                                   
-Luva de Redução<br/>(ou Bucha Longa)                          
-Adaptador + Bucha Curta + Tubo<br/>(ou Nípel + Luva RL + Tubo)
-Luva RL + Tubo                                                
-Adaptador + Bucha Curta                                       
-Luva RL                                                       
-Tubo + Luva RL + Nípel                                        
-Luva de Redução LL + Tubo + Adaptador                         
-Tubo + Luva RL                                                
-Luva LR                                                       
-Nípel + Luva de Redução RR + Nípel                            
-Bucha Roscável                                                
-Nípel + Luva de Redução RR                                    
-Bucha Roscável + Luva RR                                      
+ 
 A solução para conexões fêmea a jusante são tubos, sem bolsa, portanto, machos,
 uma vêz que não há adaptadores com macho a jusante. Para saber o comprimento do tubo,
 consulte tabela de Diâmetros em mm, polegadas e Comprimentos de bolsas de um acessório.
+
+## Pontos de utilização
+
+Os pontos de utilização são o motivo de todo o projeto.
+Precisamos considerar as demandas de cada ponto, em acordo com sua instalação no ambiente
+— sabemos que não haverá vasos sanitários fora do banheiro. Sejam estas demandas o diâmetro mínimo do ponto,
+seja a demanda de água: um chuveiro gasta mais água que uma torneira de lavatório.
+Por fim, no dimensionamento de um projeto hidráulico ainda é necessário considerar se a pressão da água no ponto
+é adequada para o uso, ninguém quer ficar reclamando do chuveiro com pouca pressão depois.
+
+| Descrição                 | Vazão de<br/>Projeto (L/s) | Peso<br/>Relativo | Diâmetro Nominal<br/>Mínimo (mm) | Pressão Dinâmica<br/>Mínima (mca)*** |
+|---------------------------|----------------------------|-------------------|----------------------------------|--------------------------------------|
+| Bacia Sanitária c Caixa   | 0.15                       | 0.3               | 20                               | 1,5 (20mm) ou 0,5 (25mm)*            |
+| Bacia Sanitária c Válvula | 1.7                        | 32                | 40**                             | 1,2                                  |
+| Banheira                  | 0.3                        | 1                 | 20                               | 0,5                                  |
+| Bidê                      | 0.1                        | 0.1               | 20                               | Sem informações                      |
+| Ducha Higiênica           | 0.2                        | 0.4               | 20                               | 3                                    |
+| Chuveiro                  | 0.2                        | 0.4               | 20                               | 2 (20mm) ou 1 (25mm)*                |
+| Chuveiro Elétrico         | 0.1                        | 0.1               | 20                               | 1 (0,7 com pressurização)            |
+| Lava Louças               | 0.3                        | 1                 | 25                               | 2,5                                  |
+| Lava Roupas               | 0.3                        | 1                 | 25                               | 2,5                                  |
+| Lavatório                 | 0.15                       | 0.3               | 20                               | 0,5                                  |
+| Mictório Cerâmico c Sifão | 0.5                        | 2.8               | 32                               | Sem informações                      |
+| Mictório Cerâmico s Sifão | 0.15                       | 0.3               | 20                               | Sem informações                      |
+| Pia                       | 0.25                       | 0.7               | 20                               | 0,5                                  |
+| Pia c Torneira Elétrica   | 0.1                        | 0.1               | 20                               | 2                                    |
+| Tanque                    | 0.25                       | 0.7               | 25                               | 0,5                                  |
+| Torneira de Jardim        | 0.2                        | 0.4               | 25                               | Sem informações                      |
+
+-* Pressão para diâmetros nominais do ponto de utilização de 20 ou 25 mm;
+
+** Para pressões inferiores a 3 mca, o diâmetro de 50 mm é recomendado;
+
+*** Recomenda-se conferir o manual de eletrodomésticos e acessórios do ponto de utilização para uma pressão mínima ideal;
+
+Sobre o dimensionamento do diâmetro de tubos e acessórios, deve-se considerar as demandas dos pontos de utilização.
+Para o cálculo das demandas existem dois métodos: o da Demanda Máxima Possível e o da Demanda Máxima Provável.
+
+O método da **Demanda Máxima Possível** consiste em considerar que todos os pontos de utilização estão ligados
+em simultâneo, e assim achar a vazão resultante (basicamente somando as vazões da tabela). É utilizado mais para casos
+extremos em que se têm grande e constante utilização dos aparelhos.
+
+O método da **Demanda Máxima Provável** por sua vez, faz considerações estatísticas para que dimensionemos apenas para
+casos prováveis, permitindo fazer sistemas mais realistas e assim mais econômicas. Sendo assim, em usos residenciais,
+este é o método **recomendado**.
 
 ## Bibliografia
 1. http://docente.ifrn.edu.br/carlindoneto/disciplinas/instalacoes-hidrossanitarias-i/tabelas
