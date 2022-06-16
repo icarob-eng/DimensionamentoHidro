@@ -51,7 +51,6 @@ pols = (
     '4'
 )
 mms = (
-    15,
     20,
     25,
     32,
@@ -59,7 +58,8 @@ mms = (
     50,
     60,
     75,
-    100
+    85,
+    110
 )
 
 
@@ -94,6 +94,33 @@ def comp_min(d: int) -> float:
     """ Retorna o comprimento mínimo em metros de um tubo para permite a conexão de dois acessórios fêmea de mesmo
     diâmetro. """
     return ceil(bolsas[mms.index(d)] / 10)/10 * 2
+
+
+""" vazões máximas para cada diâmetro na lista de diâmetros """
+NOMOGRAMA = (
+    0.62,
+    1.08,
+    2.01,
+    3.51,
+    5.89,
+    8.48,
+    13.25,
+    17.02,
+    28.51
+)
+
+
+def dim_min_vazao(q: int | float) -> int:
+    """ Aplica o nomograma """
+    for q_max in NOMOGRAMA:
+        if q_max > q:
+            i = NOMOGRAMA.index(q_max)
+            return mms[i]
+
+
+def dim_min_peso(p: int | float) -> int:
+    """ Transforma a soma dos pesos em vazão e chama `dim_min_vazao()`"""
+    return dim_min_vazao(0.3 * p ** 0.5)
 
 
 class _Componente:
@@ -199,10 +226,10 @@ class _Componente:
             error_string += f'O diâmetro de {other} é maior que o de {self};'
 
         if error_string != start:  # se houve alteração na string base
-            if isinstance(other, Adaptador) and not other._invertido:
+            if isinstance(other, Adaptador) and not other.invertido:
                 # se for um adaptador e não for invertido, inverte e testa de novo
                 # não gera recursão infinita devido ao _invertido
-                other._inverter_con()
+                other.inverter_con()
                 if self._validate_con(other):
                     return error_string
             else:
@@ -655,7 +682,7 @@ class Adaptador(_Componente):
             else:
                 raise ValueError('Tipo de adaptador inválido')
 
-        self._invertido = False  # variável que altera a leitura do tipo na função `con()`
+        self.invertido = False  # variável que altera a leitura do tipo na função `con()`
 
     def __str__(self):
         if self.tipo:
@@ -663,10 +690,10 @@ class Adaptador(_Componente):
         else:
             return 'Adaptador não especificado'
 
-    def _inverter_con(self):
+    def inverter_con(self):
         """ Inverte as conexões de uma peça, se não for de redução. """
         if Adaptador.tipos[self.tipo][2]:  # se tiver redução de diâmetro
-            self._invertido = True
+            self.invertido = True
             self.rosca = (not self.rosca[0], not self.rosca[1])
         else:
             raise ValueError(f'Impossível inverter direção de {self.tipo}, pois este adaptador possui redução.')
@@ -674,7 +701,7 @@ class Adaptador(_Componente):
     @property
     def con(self) -> str:
         r = Adaptador.tipos[self.tipo][1]
-        if not self._invertido:
+        if not self.invertido:
             return r
         else:  # se for invertido
             return r[1] + r[0]  # inverte e concatena a string

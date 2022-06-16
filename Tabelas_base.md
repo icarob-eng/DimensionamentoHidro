@@ -6,15 +6,15 @@ Tubos podem ter diversos diâmetros, mas no mercado só se produzem alguns diâm
 
 | mm  | pol   | Bolsa Usada (mm) |
 |-----|-------|------------------|
-| 15  | 1/2   | 16               |
-| 20  | 3/4   | 19               |
-| 25  | 1     | 22               |
-| 32  | 1 1/4 | 26               |
-| 40  | 1 1/2 | 31               |
-| 50  | 2     | 36               |
-| 60  | 2 1/2 | 43               |
-| 75  | 3     | 48               |
-| 100 | 4     | 61               |
+| 20  | 1/2   | 16               |
+| 25  | 3/4   | 19               |
+| 32  | 1     | 22               |
+| 40  | 1 1/4 | 26               |
+| 50  | 1 1/2 | 31               |
+| 60  | 2     | 36               |
+| 75  | 2 1/2 | 43               |
+| 85  | 3     | 48               |
+| 110 | 4     | 61               |
 
 Sobre a bolsa, trata-se do comprimento que um tubo macho entra num tubo fêmea.
 
