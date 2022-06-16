@@ -306,7 +306,7 @@ class _Componente:
             except AttributeError:
                 return x
 
-    def extremidades(self) -> list['_Componente']:
+    def extremidades(self) -> list['PontoDeUtilizacao']:
         """ Retorna todos os pontos de utilização a jusante do componente selecionado"""
         r = []
         if isinstance(self.proxima_bifurcacao, PontoDeUtilizacao):
@@ -317,22 +317,41 @@ class _Componente:
                 # senão, se for um T, usa o mesmo método até que se retorne só pontos de utilização
                 t: 'T' = self.proxima_bifurcacao
                 for p in t.jusante_a.extremidades():
-                    r.append(p)
+                    r += p  # concatena jusantes das duas bifurcações
                 for p in t.jusante_b.extremidades():
-                    r.append(p)
+                    r += p
             except AttributeError:
                 raise ValueError('O Tê precisa ter dois jusantes definidos para fazer cálculos no sistema.'
                                  ' Utilize pontos de utilização de peso ou vazão 0 se quiser não por nada.')
+            except RecursionError:
+                raise ValueError('De duas uma: ou você fez uma encanação circular; ou '
+                                 'sua encanação tem mais de 1000 bifurcações; em ambos os casos mude seu projeto.')
         else:
             raise ValueError('Toda rede precisa ter pontos de utilização em suas extremidades jusante'
                              ' Utilize pontos de utilização de peso ou vazão 0 se quiser não por nada.')
         return r
 
     def soma_vazoes(self) -> float:
-        pass
+        """ Soma as vazões. Se vazão não estiver atribuída, transforma peso relativo em vazão,
+        pela fórmula q = 0.3 * sqrt(p)"""
+        q = 0
+        for p in self.extremidades():
+            try:
+                q += p.vazao
+            except AttributeError:
+                q += 0.3 * p.peso ** 0.5
+        return q
 
     def soma_pesos_relativos(self) -> float:
-        pass
+        """ Soma os pesos relativos. Se não estiverem atribuídos, estima o peso relativo pela vazão,
+        com a fórmula pr = (q / 0.3) ^ 2"""
+        pr = 0
+        for p in self.extremidades():
+            try:
+                pr += p.peso
+            except AttributeError:
+                pr += (p.vazao / 0.3) ** 2
+        return pr
 
     @staticmethod
     def _criar_adaptador(tipo: str, diametro: int) -> '_Componente':
