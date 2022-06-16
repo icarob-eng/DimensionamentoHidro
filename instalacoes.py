@@ -167,7 +167,7 @@ class _Componente:
 
         # teste de conexão:
         if self._validate_con(other):
-            ValueError(self._validate_con(other))  # ValueError lançado aqui para ficar clara a origem do erro
+            raise self._validate_con(other)  # ValueError lançado aqui para ficar clara a origem do erro
 
         self.jusante = other
         other.montante = self
@@ -175,11 +175,11 @@ class _Componente:
             other.diametro = self.diametro
         return other
 
-    def _validate_con(self, other: '_Componente', **kwargs) -> str | None:
+    def _validate_con(self, other: '_Componente', **kwargs) -> ValueError | None:
         """ Retorna uma string de erro ou None se não houver nenhum erro. """
         # self: montante, other: jusante
         if not isinstance(other, _Componente) and testes:
-            raise ValueError(f'Erro ao adicionar {other} a {self}. {other} não parece ser um componente válido.')
+            return ValueError(f'Erro ao adicionar {other} a {self}. {other} não parece ser um componente válido.')
         SaidaReservatorio.check_invalid_connection(other)
 
         # se for um tê a conexão a montante e jusante serão outras
@@ -189,7 +189,7 @@ class _Componente:
             elif 'entrada-m' in kwargs:
                 e_m = kwargs['entrada-m']
             else:
-                raise ValueError('Você precisa especificar a conexão de entrada do Tê a montante.'
+                return ValueError('Você precisa especificar a conexão de entrada do Tê a montante.'
                                  'Use `e-m` ou `entrada-m` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
             m = 0 if e_m == CENTRO else 1
         else:
@@ -200,7 +200,7 @@ class _Componente:
             elif 'entrada_j' in kwargs:
                 e_j = kwargs['entrada-j']
             else:
-                raise ValueError('Você precisa especificar a conexão de entrada do Tê a montante.'
+                return ValueError('Você precisa especificar a conexão de entrada do Tê a montante.'
                                  'Use `e-j` ou `entrada-j` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
             j = 1 if e_j == CENTRO else 0
         else:
@@ -231,9 +231,9 @@ class _Componente:
                 # não gera recursão infinita devido ao _invertido
                 other.inverter_con()
                 if self._validate_con(other):
-                    return error_string
+                    return ValueError(error_string)
             else:
-                return error_string
+                return ValueError(error_string)
         return None
 
     @staticmethod
@@ -306,6 +306,34 @@ class _Componente:
             except AttributeError:
                 return x
 
+    def extremidades(self) -> list['_Componente']:
+        """ Retorna todos os pontos de utilização a jusante do componente selecionado"""
+        r = []
+        if isinstance(self.proxima_bifurcacao, PontoDeUtilizacao):
+            # se tiver um ponto de utilização a jusante, retorne o ponto
+            return [self.proxima_bifurcacao]
+        elif isinstance(self.proxima_bifurcacao, T):
+            try:
+                # senão, se for um T, usa o mesmo método até que se retorne só pontos de utilização
+                t: 'T' = self.proxima_bifurcacao
+                for p in t.jusante_a.extremidades():
+                    r.append(p)
+                for p in t.jusante_b.extremidades():
+                    r.append(p)
+            except AttributeError:
+                raise ValueError('O Tê precisa ter dois jusantes definidos para fazer cálculos no sistema.'
+                                 ' Utilize pontos de utilização de peso ou vazão 0 se quiser não por nada.')
+        else:
+            raise ValueError('Toda rede precisa ter pontos de utilização em suas extremidades jusante'
+                             ' Utilize pontos de utilização de peso ou vazão 0 se quiser não por nada.')
+        return r
+
+    def soma_vazoes(self) -> float:
+        pass
+
+    def soma_pesos_relativos(self) -> float:
+        pass
+
     @staticmethod
     def _criar_adaptador(tipo: str, diametro: int) -> '_Componente':
         if tipo == 'tubo':
@@ -362,7 +390,7 @@ class _Componente:
                     comps[i] << comps[i + 1]
                 comps[-1] << jusante
         else:
-            ValueError('Erro ao definir adaptadores:'
+            raise ValueError('Erro ao definir adaptadores:'
                        'peças a montante e a jusante da conexão precisam ter diâmetro definido')
 #
 
@@ -469,7 +497,7 @@ class T(_Componente):
     def bifurcar(self, other: _Componente, **kwargs: int) -> 'T':
         """ Método de bifurcar se faz necessário para o argumento de direção de saída."""
         if self._validate_con(other):
-            ValueError(self._validate_con(other))
+            raise self._validate_con(other)
 
         if not self.jusante_a:
             if 'direc' in kwargs:
@@ -493,6 +521,10 @@ class T(_Componente):
             raise ValueError(f'Esse Tê já possui duas conexões, a saber: um {self.jusante_a} e um {self.jusante_b}')
         other.montante = self
         return self
+
+    @property
+    def proxima_bifurcacao(self) -> tuple['_Componente', '_Componente']:
+        return self.jusante_a, self.jusante_b
 
 
 class SaidaReservatorio(_Componente):
