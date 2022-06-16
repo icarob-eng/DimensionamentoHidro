@@ -122,6 +122,8 @@ def dim_min_peso(p: int | float) -> int:
     """ Transforma a soma dos pesos em vazão e chama `dim_min_vazao()`"""
     return dim_min_vazao(0.3 * p ** 0.5)
 
+# todo: substituir direc por saida
+
 
 class _Componente:
     _INDEF = '!definir!'
@@ -175,36 +177,23 @@ class _Componente:
             other.diametro = self.diametro
         return other
 
-    def _validate_con(self, other: '_Componente', **kwargs) -> ValueError | None:
+    def _validate_con(self, other: '_Componente') -> ValueError | None:
         """ Retorna uma string de erro ou None se não houver nenhum erro. """
         # self: montante, other: jusante
         if not isinstance(other, _Componente) and testes:
             return ValueError(f'Erro ao adicionar {other} a {self}. {other} não parece ser um componente válido.')
         SaidaReservatorio.check_invalid_connection(other)
 
-        # se for um tê a conexão a montante e jusante serão outras
+        # se for um tê, as características das conexões a montante e jusante serão invertidas
+        # lembrando que num Tê LR, temos que centro → LR ← todas as outras conexões
         if isinstance(self, T):
-            if 'e-m' in kwargs:
-                e_m = kwargs['e-m']
-            elif 'entrada-m' in kwargs:
-                e_m = kwargs['entrada-m']
-            else:
-                return ValueError('Você precisa especificar a conexão de entrada do Tê a montante.'
-                                 'Use `e-m` ou `entrada-m` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
-            m = 0 if e_m == CENTRO else 1
+            m = 1 if self.entrada == CENTRO else 0  # inverte o valor da direção montante se a entrada não for o centro
         else:
-            m = 1
+            m = 1  # conexão do self que será usada
         if isinstance(other, T):
-            if 'e-j' in kwargs:
-                e_j = kwargs['e-j']
-            elif 'entrada_j' in kwargs:
-                e_j = kwargs['entrada-j']
-            else:
-                return ValueError('Você precisa especificar a conexão de entrada do Tê a montante.'
-                                 'Use `e-j` ou `entrada-j` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
-            j = 1 if e_j == CENTRO else 0
+            j = 0 if other.entrada == CENTRO else 1
         else:
-            j = 0
+            j = 0  # conexão do other que será usada
 
         error_string = start = f'{self} não pode se conectar com {other}, pois:'
         base = '\nA conexão jusante de {} é {} e a conexão jusante de {} é {};'
@@ -215,7 +204,7 @@ class _Componente:
                 other,
                 'roscável' if other.rosca[j] else 'liso'
             )
-        if not self.con[m] == other.con[j]:
+        if not self.con[m] != other.con[j]:
             error_string += base.format(
                 self,
                 'fêmea' if self.con[m] == 'F' else 'macho',
@@ -298,7 +287,8 @@ class _Componente:
                 return x
 
     @property
-    def proxima_bifurcacao(self) -> '_Componente':
+    def proxima_bifurcacao(self) -> '_Componente' or 'T':
+        """ Especificação de T necessária por T ser um motivo de uso frequente desse método. """
         x = self.jusante
         while True:
             try:
@@ -307,18 +297,18 @@ class _Componente:
                 return x
 
     def extremidades(self) -> list['PontoDeUtilizacao']:
-        """ Retorna todos os pontos de utilização a jusante do componente selecionado"""
+        """ Retorna todos os pontos de utilização a jusante do componente selecionado."""
+        bifurca: 'PontoDeUtilizacao' or 'T' = self.proxima_bifurcacao
         r = []
-        if isinstance(self.proxima_bifurcacao, PontoDeUtilizacao):
+        if isinstance(bifurca, PontoDeUtilizacao):
             # se tiver um ponto de utilização a jusante, retorne o ponto
-            return [self.proxima_bifurcacao]
-        elif isinstance(self.proxima_bifurcacao, T):
+            return [bifurca]
+        elif isinstance(bifurca, T):
             try:
                 # senão, se for um T, usa o mesmo método até que se retorne só pontos de utilização
-                t: 'T' = self.proxima_bifurcacao
-                for p in t.jusante_a.extremidades():
+                for p in bifurca.jusante_a.extremidades():
                     r += p  # concatena jusantes das duas bifurcações
-                for p in t.jusante_b.extremidades():
+                for p in bifurca.jusante_b.extremidades():
                     r += p
             except AttributeError:
                 raise ValueError('O Tê precisa ter dois jusantes definidos para fazer cálculos no sistema.'
@@ -410,7 +400,7 @@ class _Componente:
                 comps[-1] << jusante
         else:
             raise ValueError('Erro ao definir adaptadores:'
-                       'peças a montante e a jusante da conexão precisam ter diâmetro definido')
+                             ' peças a montante e a jusante da conexão precisam ter diâmetro definido')
 #
 
 
@@ -497,8 +487,8 @@ class T(_Componente):
         elif 'entrada' in kwargs:
             self.entrada = kwargs['entrada']
         else:
-            raise ValueError('Você precisa especificar a conexão de entrada.'
-                             'Use `e` ou `entrada` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
+            raise ValueError('Você precisa especificar a conexão de entrada do Tê.'
+                             ' Use `e` ou `entrada` com valores `CENTRO`, `HORIZONTAL`, `CIMA` ou `BAIXO`')
 
     def __str__(self):
         return 'Tê'
@@ -525,7 +515,7 @@ class T(_Componente):
                 self.direc_a = kwargs['direcao']
             else:
                 raise ValueError('Você precisa especificar uma direção.'
-                                 'Use `direc` ou `direcao` com valores `BAIXO`, `HORIZONTAL` ou `CIMA`')
+                                 ' Use `direc` ou `direcao` com valores `BAIXO`, `HORIZONTAL` ou `CIMA`')
             self.jusante_a = other
         elif not self.jusante_b:
             if 'direc' in kwargs:
@@ -563,9 +553,6 @@ class SaidaReservatorio(_Componente):
         else:
             raise ValueError('Você precisa especificar a altura máxima da coluna d\'água.')
 
-        if self.diametro == _Componente._INDEF:
-            raise ValueError('O diâmetro da saída do reservatório deve ser especificado.')
-
     def __str__(self):
         return 'Saída do reservatório'
 
@@ -578,9 +565,9 @@ class SaidaReservatorio(_Componente):
         return 'FF'
 
     @staticmethod
-    def check_invalid_connection(other) -> None:
+    def check_invalid_connection(other) -> None | ValueError:
         if isinstance(other, SaidaReservatorio):
-            raise ValueError('Não é possível fazer conexões a montante da saída do reservatório.')
+            return ValueError('Não é possível fazer conexões a montante da saída do reservatório.')
 
 
 class Registro(_Componente):
@@ -647,24 +634,30 @@ class PontoDeUtilizacao(_Componente):
 
         else:
             raise ValueError('É necessário identificar algum tipo de uso do ponto de utilização, seja pelo uso'
-                             '(ver tabela de usos), seja pelo peso relativo, seja pela vazão de projeto (L/s).')
+                             ' (ver tabela de usos), seja pelo peso relativo, seja pela vazão de projeto (L/s).')
 
-        if self.uso and self.uso not in usos:
-            raise ValueError('Uso {}')
+        if self.uso not in usos:
+            if self.uso.lower() in usos:
+                self.uso = self.uso.lower()
+            else:
+                raise ValueError(f'"{self.uso}" não é um uso reconhecido.')
         else:
             self.vazao = usos[self.uso][0]
             self.peso = usos[self.uso][1]
 
+        self.rosca = RR
+
     def __str__(self):
         r = 'Ponto de utilização{}'
         if self.uso:
-            return r.format(f' de {self.uso}.')
+            return r.format(f' de {self.uso}')
         else:
             return r.format('.')
 
     @property
-    def con(self) -> None:
-        return None
+    def con(self) -> str:
+        # Retorna macho, pois precisa conectar com um Tê ou Joelho, geralmente
+        return 'MM'
 
 
 class Adaptador(_Componente):
