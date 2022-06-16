@@ -12,5 +12,7 @@ t.bifurcar(Tubo(c=2), direc=HORIZONTAL)
 ja = t.jusante_a
 jb = t.jusante_b
 
-ja << Joelho90(direc=HORIZONTAL, rosca=LR) << PontoDeUtilizacao(u='Pia')
+ja << Joelho90(direc=HORIZONTAL, rosca=LR) << PontoDeUtilizacao(u='Lavatório')
 jb << Joelho90(direc=HORIZONTAL, rosca=LR) << PontoDeUtilizacao(u='Ducha Higiênica')
+
+print(b.soma_pesos_relativos())

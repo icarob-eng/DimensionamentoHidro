@@ -307,9 +307,15 @@ class _Componente:
             try:
                 # senão, se for um T, usa o mesmo método até que se retorne só pontos de utilização
                 for p in bifurca.jusante_a.extremidades():
-                    r += p  # concatena jusantes das duas bifurcações
+                    if isinstance(p, list):
+                        r += p  # concatena jusantes das duas bifurcações
+                    else:
+                        r.append(p)
                 for p in bifurca.jusante_b.extremidades():
-                    r += p
+                    if isinstance(p, list):
+                        r += p
+                    else:
+                        r.append(p)
             except AttributeError:
                 raise ValueError('O Tê precisa ter dois jusantes definidos para fazer cálculos no sistema.'
                                  ' Utilize pontos de utilização de peso ou vazão 0 se quiser não por nada.')
@@ -641,9 +647,9 @@ class PontoDeUtilizacao(_Componente):
                 self.uso = self.uso.lower()
             else:
                 raise ValueError(f'"{self.uso}" não é um uso reconhecido.')
-        else:
-            self.vazao = usos[self.uso][0]
-            self.peso = usos[self.uso][1]
+
+        self.vazao = usos[self.uso][0]
+        self.peso = usos[self.uso][1]
 
         self.rosca = RR
 
